@@ -15,11 +15,13 @@ TEMPLATE = app
 SOURCES += main.cpp\
         mainwindow.cpp \
     coredata.cpp \
-    addpersondialog.cpp
+    addpersondialog.cpp \
+    signinmodel.cpp
 
 HEADERS  += mainwindow.h \
     coredata.h \
-    addpersondialog.h
+    addpersondialog.h \
+    signinmodel.h
 
 FORMS    += mainwindow.ui \
     addpersondialog.ui

@@ -9,6 +9,7 @@
 #include <QDate>
 #include <QSqlRecord>
 #include <QSqlField>
+#include <QCalendarWidget>
 
 #include <QDebug>
 
@@ -27,10 +28,15 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->editDetailButton, SIGNAL(clicked()), this, SLOT(showPersonDetailEditForm()));
     connect(ui->confirmButton, SIGNAL(clicked()), this, SLOT(updatePersonDetail()));
     connect(ui->delButton, SIGNAL(clicked()), this, SLOT(deletePeople()));
+    connect(ui->filterEdit, SIGNAL(textChanged(QString)), this, SLOT(updateSignedFilter(QString)));
+    connect(ui->signInButton, SIGNAL(clicked()), this, SLOT(unlockSignInTable()));
+    connect(ui->lockButton, SIGNAL(clicked()), this, SLOT(lockSignInTable()));
     ui->tabWidget->setCurrentIndex(0);
     ui->tabWidget->setTabEnabled(1, false);
     ui->tabWidget->setTabEnabled(2, false);
     ui->delButton->setEnabled(false);
+    ui->signDateEdit->setDate(QDate::currentDate());
+    ui->signDateEdit->calendarWidget()->setFirstDayOfWeek(Qt::Monday);
     hidePersonDetailEditForm();
     currentPersonRow = 0;
     ui->personTableView->setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -51,10 +57,14 @@ bool MainWindow::newDatabase()
     if(core->createDBFile(filename)) {
         ui->personTableView->setModel(core->getPersonModel());
         setPersonTableHidden();
+        proxySignInModel = new QSortFilterProxyModel(this);
+        proxySignInModel->setSourceModel(core->getSignInModel());
+        ui->activePersonView->setModel(proxySignInModel);
         ui->tabWidget->setTabEnabled(1, true);
         ui->tabWidget->setTabEnabled(2, true);
         ui->tabWidget->setCurrentIndex(1);
         connect(ui->addButton, SIGNAL(clicked()), this, SLOT(createAddPersonDialog()));
+        connect(ui->signDateEdit, SIGNAL(dateChanged(QDate)), core, SLOT(setSignInDate(QDate)));
         personId = 0;
         ui->actionClose->setEnabled(true);
         ui->actionNew->setEnabled(false);
@@ -72,6 +82,9 @@ void MainWindow::openDatabase()
     qDebug()<<filename;
     if (core->openDBFile(filename)) {
         ui->personTableView->setModel(core->getPersonModel());
+        proxySignInModel = new QSortFilterProxyModel(this);
+        proxySignInModel->setSourceModel(core->getSignInModel());
+        ui->activePersonView->setModel(proxySignInModel);
         setPersonTableHidden();
         ui->tabWidget->setTabEnabled(1, true);
         ui->tabWidget->setTabEnabled(2, true);
@@ -79,6 +92,7 @@ void MainWindow::openDatabase()
         personId = core->getMaxPersonId();
         qDebug()<<"Max Person ID: "<<personId;
         connect(ui->addButton, SIGNAL(clicked()), this, SLOT(createAddPersonDialog()));
+        connect(ui->signDateEdit, SIGNAL(dateChanged(QDate)), core, SLOT(setSignInDate(QDate)));
         ui->actionClose->setEnabled(true);
         ui->actionNew->setEnabled(false);
         ui->actionOpen->setEnabled((false));
@@ -88,6 +102,9 @@ void MainWindow::openDatabase()
 void MainWindow::closeDatabase()
 {
     ui->personTableView->setModel(0);
+    ui->activePersonView->setModel(0);
+    delete proxySignInModel;
+    proxySignInModel = 0;
     core->getDataBase()->close();
     ui->actionClose->setEnabled(false);
     ui->actionNew->setEnabled(true);
@@ -230,11 +247,38 @@ void MainWindow::deletePeople()
     showPersonDetail(previousRowIndex);
 }
 
+void MainWindow::updateSignedFilter(const QString & data)
+{
+    if (proxySignInModel) {
+        proxySignInModel->setFilterRegExp(QRegExp(data, Qt::CaseInsensitive));
+    }
+}
+
+void MainWindow::unlockSignInTable()
+{
+    ui->filterEdit->setEnabled(true);
+    ui->activePersonView->setEnabled(true);
+    ui->lockButton->setEnabled(true);
+    ui->signInButton->setEnabled(false);
+}
+
+void MainWindow::lockSignInTable()
+{
+    ui->filterEdit->setEnabled(false);
+    ui->activePersonView->setEnabled(false);
+    ui->lockButton->setEnabled(false);
+    ui->signInButton->setEnabled(true);
+}
+
 void MainWindow::setPersonTableHidden()
 {
     ui->personTableView->setColumnHidden(0, true);
     ui->personTableView->setColumnHidden(4, true);
     ui->personTableView->setColumnHidden(5, true);
+    ui->activePersonView->setColumnHidden(0, true);
+    ui->activePersonView->setColumnHidden(2, true);
+    ui->activePersonView->setColumnHidden(3, true);
+    proxySignInModel->setFilterKeyColumn(1);
 }
 
 void MainWindow::showPersonDetailLabels()

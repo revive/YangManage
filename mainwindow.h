@@ -2,6 +2,7 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+#include <QSortFilterProxyModel>
 #include "coredata.h"
 
 namespace Ui {
@@ -26,12 +27,16 @@ private slots:
     void hidePersonDetailEditForm();
     void updatePersonDetail();
     void deletePeople();
+    void updateSignedFilter(const QString &);
+    void unlockSignInTable();
+    void lockSignInTable();
 
 private:
     void setPersonTableHidden();
     void showPersonDetailLabels();
     Ui::MainWindow *ui;
     CoreData * core;
+    QSortFilterProxyModel * proxySignInModel;
     int currentPersonRow;
 };
 
