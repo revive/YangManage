@@ -120,6 +120,11 @@ void CoreData::setSignInDate(const QDate &date)
     signInModel->setDate(date.toString("yyyy-MM-dd"));
 }
 
+void CoreData::refreshModel()
+{
+    signInModel->refresh();
+}
+
 void CoreData::setPersonModel()
 {
     personModel->setTable("people");

@@ -15,6 +15,7 @@ public:
     void init (const QString str, const QSqlDatabase & db = QSqlDatabase());
     void setQuery (const QString & query, const QSqlDatabase & db = QSqlDatabase());
     void setDate(const QString dateString);
+    void refresh();
 
 signals:
     
@@ -23,7 +24,6 @@ public slots:
 private:
     bool signIn(int personId, int dateId);
     bool unSignIn(int personId, int dateId);
-    void refresh();
     int maxId();
 
     QString queryString;

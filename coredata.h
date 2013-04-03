@@ -24,6 +24,9 @@ public:
 
 public slots:
     void setSignInDate (const QDate &date);
+    void refreshModel();
+
+private slots:
 
 private:
     void setPersonModel();

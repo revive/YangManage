@@ -65,6 +65,7 @@ bool MainWindow::newDatabase()
         ui->tabWidget->setCurrentIndex(1);
         connect(ui->addButton, SIGNAL(clicked()), this, SLOT(createAddPersonDialog()));
         connect(ui->signDateEdit, SIGNAL(dateChanged(QDate)), core, SLOT(setSignInDate(QDate)));
+        connect(ui->refreshButton, SIGNAL(clicked()), core, SLOT(refreshModel()));
         personId = 0;
         ui->actionClose->setEnabled(true);
         ui->actionNew->setEnabled(false);
@@ -93,6 +94,7 @@ void MainWindow::openDatabase()
         qDebug()<<"Max Person ID: "<<personId;
         connect(ui->addButton, SIGNAL(clicked()), this, SLOT(createAddPersonDialog()));
         connect(ui->signDateEdit, SIGNAL(dateChanged(QDate)), core, SLOT(setSignInDate(QDate)));
+        connect(ui->refreshButton, SIGNAL(clicked()), core, SLOT(refreshModel()));
         ui->actionClose->setEnabled(true);
         ui->actionNew->setEnabled(false);
         ui->actionOpen->setEnabled((false));
