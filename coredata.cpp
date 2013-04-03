@@ -56,6 +56,8 @@ bool CoreData::createDBFile(QString dbname)
     if (!query.execBatch())
          qDebug() << query.lastError();
 
+    query.exec("pragma synchronous=2");
+    qDebug()<<query.lastError();
     query.exec("create table person_date (id int primary key, person_id integer, date_id integer, foreign key(person_id) references people(id), foreign key(date_id) references date(id))");
     qDebug() << query.lastError();
     personModel = new QSqlTableModel(0, db);

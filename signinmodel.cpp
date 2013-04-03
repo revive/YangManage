@@ -68,6 +68,7 @@ void SignInModel::init(const QString str, const QSqlDatabase &db)
     qDebug()<<query;
     queryString = query;
     setQuery(queryString, db);
+    qDebug()<<"finished!";
 }
 
 void SignInModel::setQuery(const QString &query, const QSqlDatabase &db)

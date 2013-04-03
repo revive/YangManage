@@ -56,10 +56,10 @@ bool MainWindow::newDatabase()
     qDebug()<<filename;
     if(core->createDBFile(filename)) {
         ui->personTableView->setModel(core->getPersonModel());
-        setPersonTableHidden();
         proxySignInModel = new QSortFilterProxyModel(this);
         proxySignInModel->setSourceModel(core->getSignInModel());
         ui->activePersonView->setModel(proxySignInModel);
+        setPersonTableHidden();
         ui->tabWidget->setTabEnabled(1, true);
         ui->tabWidget->setTabEnabled(2, true);
         ui->tabWidget->setCurrentIndex(1);
