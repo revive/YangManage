@@ -56,7 +56,9 @@ bool MainWindow::newDatabase()
         return false;
     }
     qDebug()<<filename;
+    ui->statusBar->showMessage(QString::fromUtf8("数据库初始化中，请等待……"));
     if(core->createDBFile(filename)) {
+        ui->statusBar->showMessage(QString::fromUtf8("数据库初始化完成。"));
         ui->personTableView->setModel(core->getPersonModel());
         proxySignInModel = new QSortFilterProxyModel(this);
         proxySignInModel->setSourceModel(core->getSignInModel());
