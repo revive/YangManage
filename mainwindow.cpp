@@ -12,6 +12,7 @@
 #include <QCalendarWidget>
 
 #include <QDebug>
+#include <QMap>
 
 extern int personId;
 
@@ -34,6 +35,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui->tabWidget->setCurrentIndex(0);
     ui->tabWidget->setTabEnabled(1, false);
     ui->tabWidget->setTabEnabled(2, false);
+    ui->tabWidget->setTabEnabled(3, false);
     ui->delButton->setEnabled(false);
     ui->signDateEdit->setDate(QDate::currentDate());
     ui->signDateEdit->calendarWidget()->setFirstDayOfWeek(Qt::Monday);
@@ -62,6 +64,7 @@ bool MainWindow::newDatabase()
         setPersonTableHidden();
         ui->tabWidget->setTabEnabled(1, true);
         ui->tabWidget->setTabEnabled(2, true);
+        ui->tabWidget->setTabEnabled(3, true);
         ui->tabWidget->setCurrentIndex(1);
         connect(ui->addButton, SIGNAL(clicked()), this, SLOT(createAddPersonDialog()));
         connect(ui->signDateEdit, SIGNAL(dateChanged(QDate)), core, SLOT(setSignInDate(QDate)));
@@ -70,6 +73,7 @@ bool MainWindow::newDatabase()
         ui->actionClose->setEnabled(true);
         ui->actionNew->setEnabled(false);
         ui->actionOpen->setEnabled((false));
+        connect(ui->reportWidget, SIGNAL(currentRowChanged(int)), this, SLOT(displayReport(int)));
     }
     return true;
 }
@@ -89,6 +93,7 @@ void MainWindow::openDatabase()
         setPersonTableHidden();
         ui->tabWidget->setTabEnabled(1, true);
         ui->tabWidget->setTabEnabled(2, true);
+        ui->tabWidget->setTabEnabled(3, true);
         ui->tabWidget->setCurrentIndex(1);
         personId = core->getMaxPersonId();
         qDebug()<<"Max Person ID: "<<personId;
@@ -98,6 +103,7 @@ void MainWindow::openDatabase()
         ui->actionClose->setEnabled(true);
         ui->actionNew->setEnabled(false);
         ui->actionOpen->setEnabled((false));
+        connect(ui->reportWidget, SIGNAL(currentRowChanged(int)), this, SLOT(displayReport(int)));
     }
 }
 
@@ -114,6 +120,7 @@ void MainWindow::closeDatabase()
     ui->tabWidget->setCurrentIndex(0);
     ui->tabWidget->setTabEnabled(1, false);
     ui->tabWidget->setTabEnabled(2, false);
+    ui->tabWidget->setTabEnabled(3, false);
 }
 
 void MainWindow::createAddPersonDialog()
@@ -270,6 +277,90 @@ void MainWindow::lockSignInTable()
     ui->activePersonView->setEnabled(false);
     ui->lockButton->setEnabled(false);
     ui->signInButton->setEnabled(true);
+}
+
+void MainWindow::displayReport(int i)
+{
+    qDebug()<<i;
+    QDate date = QDate::currentDate();
+    QDate sdate, edate;
+    QString key;
+    int dow, dom, doy, dot;
+
+    bool validReport = true;
+    if (i==0) {
+        dow = date.dayOfWeek();
+        sdate = date.addDays(-(dow-1));
+        edate = date;
+    } else if (i==1) {
+        dow = date.dayOfWeek();
+        sdate = date.addDays(-(dow-1)-7);
+        edate = date.addDays(-dow);
+    } else if (i==2) {
+        dom = date.day();
+        sdate = date.addDays(-(dom-1));
+        edate = date;
+    } else if (i==3) {
+        dom = date.day();
+        edate = date.addDays(-dom);
+        sdate = edate.addDays(-edate.daysInMonth()+1);
+    } else if (i==4) {
+        doy = date.dayOfYear();
+        sdate = date.addDays(-doy+1);
+        edate = date;
+    } else {
+        validReport = false;
+    }
+    if (!validReport)
+        return;
+    key = sdate.toString("yyyyMMdd").append("-").append(edate.toString("yyyyMMdd"));
+    SignStats * stats = core->findStats(key);
+    if (stats!=0) {
+        qDebug()<<"find stats.";
+        showReport(stats);
+    } else {
+        stats = core->addStats(sdate, edate);
+        qDebug()<<"new stats";
+        showReport(stats);
+    }
+}
+
+void MainWindow::showReport(const SignStats *stats)
+{
+    QString text;
+    text.append(QString::fromUtf8("<h1>报表</h1>"));
+    text.append("<h2>").append(stats->getStartDate()).append(QString::fromUtf8(" 至 ")).append(stats->getEndDate()).append("</h2>");
+    text.append("<hr>");
+    text.append("<p>");
+    int totalPersonTime = stats->getTotalPersonTime();
+    text.append(QString::fromUtf8("时段总人次：")).append(QString::number(totalPersonTime));
+    text.append("</p>");
+    text.append("<hr>");
+    text.append("<p>");
+    int totalPerson = stats->getTotalPerson();
+    text.append(QString::fromUtf8("时段总人数：")).append(QString::number(totalPerson));
+    text.append("</p>");
+    text.append("<hr>");
+    text.append("<p>").append(QString::fromUtf8("时段到达次数统计")).append("</p>");
+    text.append(QString::fromUtf8("<div><table><tr><td>次数</td><td>人数</td></tr>"));
+    QMap<int, int> ptc = stats->getPersonTimeCount();
+    QMapIterator<int, int> im(ptc);
+    while (im.hasNext()) {
+        im.next();
+        text.append("<tr><td>").append(QString::number(im.key())).append("</td><td>").append(QString::number(im.value())).append("</td></tr>");
+    }
+    text.append("</table></div>");
+    text.append("<p>").append(QString::fromUtf8("最多到达次数排序")).append("</p>");
+    text.append(QString::fromUtf8("<div><table><tr><td>姓名</td><td>次数</td></tr>"));
+    QMap<int, QString> tpt = stats->getTopPersonTime();
+    QMapIterator<int, QString> it(tpt);
+    it.toBack();
+    while (it.hasPrevious()) {
+        it.previous();
+        text.append("<tr><td>").append(it.value()).append("</td><td>").append(QString::number(it.key())).append("</td></tr>");
+    }
+    text.append("</table></div>");
+    ui->reportBrowser->setHtml(text);
 }
 
 void MainWindow::setPersonTableHidden()

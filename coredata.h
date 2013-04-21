@@ -2,11 +2,13 @@
 #define COREDATA_H
 
 #include "signinmodel.h"
+#include "signstats.h"
 
 #include <QObject>
 #include <QSqlDatabase>
 #include <QSqlTableModel>
 #include <QDate>
+#include <QMap>
 
 class CoreData : public QObject
 {
@@ -21,6 +23,9 @@ public:
     SignInModel * getSignInModel();
     int getMaxPersonId();
     void setSignInModel(const QDate & date, QSqlDatabase & db);
+    SignStats * findStats(QString key);
+    void addStats(SignStats * stats);
+    SignStats *addStats(QDate &sdate, QDate &edate);
 
 public slots:
     void setSignInDate (const QDate &date);
@@ -33,6 +38,7 @@ private:
     QSqlDatabase db;
     QSqlTableModel * personModel;
     SignInModel * signInModel;
+    QMap<QString, SignStats *> statsReports;
 };
 
 #endif // COREDATA_H

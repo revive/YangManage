@@ -30,8 +30,10 @@ private slots:
     void updateSignedFilter(const QString &);
     void unlockSignInTable();
     void lockSignInTable();
+    void displayReport(int i);
 
 private:
+    void showReport(const SignStats * stats);
     void setPersonTableHidden();
     void showPersonDetailLabels();
     Ui::MainWindow *ui;

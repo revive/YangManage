@@ -16,12 +16,14 @@ SOURCES += main.cpp\
         mainwindow.cpp \
     coredata.cpp \
     addpersondialog.cpp \
-    signinmodel.cpp
+    signinmodel.cpp \
+    signstats.cpp
 
 HEADERS  += mainwindow.h \
     coredata.h \
     addpersondialog.h \
-    signinmodel.h
+    signinmodel.h \
+    signstats.h
 
 FORMS    += mainwindow.ui \
     addpersondialog.ui

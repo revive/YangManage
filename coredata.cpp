@@ -115,6 +115,72 @@ void CoreData::setSignInModel(const QDate &date, QSqlDatabase &db)
     signInModel->init(str, db);
 }
 
+SignStats *CoreData::findStats(QString key)
+{
+    SignStats * stats = statsReports.value(key);
+    return stats;
+}
+
+void CoreData::addStats(SignStats *stats)
+{
+    statsReports.insert(stats->getKey(), stats);
+}
+
+SignStats * CoreData::addStats(QDate &sdate, QDate &edate)
+{
+    SignStats * stats = new SignStats(sdate, edate);
+    QString sdate_str = sdate.toString("yyyy-MM-dd");
+    QString edate_str = edate.toString("yyyy-MM-dd");
+    qDebug()<<"start date: " << sdate_str;
+    qDebug()<<"end date: " << edate_str;
+    QString query_str;
+    query_str = QString("select count(*) from person_date join date on person_date.date_id=date.id where date.date>='%1' and date.date<='%2'").arg(sdate_str).arg(edate_str);
+    qDebug()<<query_str;
+    QSqlQuery squery;
+    squery.exec(query_str);
+    squery.next();
+    int npt = 0;
+    if (!squery.value(0).isNull()) {
+       npt = squery.value(0).toInt();
+       qDebug()<<"person time in period: " << npt;
+    }
+    stats->setTotalPersonTime(npt);
+
+    query_str = QString("select count(distinct person_id) from person_date join date on person_date.date_id=date.id where date.date>='%1' and date.date<='%2'").arg(sdate_str).arg(edate_str);
+    squery.exec(query_str);
+    squery.next();
+    int np = 0;
+    if (!squery.value(0).isNull()) {
+        np = squery.value(0).toInt();
+        qDebug()<<"person in period: " << np;
+    }
+    stats->setTotalPerson(np);
+
+    query_str = QString("select count(d),d from (select count(*) as d from person_date join date on person_date.date_id=date.id where date.date>='%1' and date.date<='%2' group by person_id) group by d").arg(sdate_str).arg(edate_str);
+    squery.exec(query_str);
+    int count = 0;
+    npt = 0;
+    while (squery.next()) {
+        count = squery.value(0).toInt();
+        npt = squery.value(1).toInt();
+        qDebug()<<npt<<" -> "<<count;
+        stats->addPersonTimeCount(npt, count);
+    }
+
+    query_str = QString("select count(*) as d, name from person_date join date on person_date.date_id=date.id join people on person_date.person_id = people.id where date.date>='%1' and date.date<='%2' group by person_id order by d desc limit 5").arg(sdate_str).arg(edate_str);
+    squery.exec(query_str);
+    QString name;
+    while(squery.next()) {
+        count = squery.value(0).toInt();
+        name = squery.value(1).toString();
+        stats->addTopPersonTime(count, name);
+        qDebug() << name << " -> "<< count;
+    }
+    statsReports.insert(stats->getKey(), stats);
+
+    return stats;
+}
+
 void CoreData::setSignInDate(const QDate &date)
 {
     signInModel->setDate(date.toString("yyyy-MM-dd"));
