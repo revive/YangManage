@@ -22,9 +22,9 @@ void SignStats::addPersonTimeCount(int pt, int count)
     personTimeCount.insert(pt, count);
 }
 
-void SignStats::addTopPersonTime(int count, QString &name)
+void SignStats::addTopPersonTime(QString &name, int count)
 {
-    topPersonTime.insert(count, name);
+    topPersonTime.append(QPair<QString, int> (name, count));
 }
 
 void SignStats::addPersonTimeByWeekDay(int count)
@@ -47,7 +47,7 @@ QMap<int, int> SignStats::getPersonTimeCount() const
     return personTimeCount;
 }
 
-QMap<int, QString> SignStats::getTopPersonTime() const
+QList<QPair<QString, int> > SignStats::getTopPersonTime() const
 {
     return topPersonTime;
 }
@@ -80,4 +80,13 @@ QString SignStats::getEndDate() const
 void SignStats::setUsableStat(bool status)
 {
     usable = status;
+}
+
+void SignStats::reset()
+{
+    totalPerson = 0;
+    totalPersonTime = 0;
+    personTimeCount.clear();
+    personTimeByWeekDay.clear();
+    topPersonTime.clear();
 }

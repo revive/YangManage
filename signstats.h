@@ -4,6 +4,7 @@
 #include <QString>
 #include <QDate>
 #include <QMap>
+#include <QPair>
 #include <QList>
 
 class SignStats
@@ -14,13 +15,13 @@ public:
     void setTotalPerson(int tp);
     void setTotalPersonTime(int tpt);
     void addPersonTimeCount(int pt, int count);
-    void addTopPersonTime(int count, QString & name);
+    void addTopPersonTime(QString & name, int count);
     void addPersonTimeByWeekDay(int count);
 
     int getTotalPerson() const;
     int getTotalPersonTime() const;
     QMap<int, int> getPersonTimeCount() const;
-    QMap<int, QString> getTopPersonTime() const;
+    QList<QPair<QString, int> > getTopPersonTime() const;
     QList<int> getPersonTimeByWeekDay() const;
     bool isUsable();
     QString getKey() const;
@@ -28,6 +29,7 @@ public:
     QString getEndDate() const;
 
     void setUsableStat(bool status);
+    void reset();
 private:
     QString key;
     QDate startDate;
@@ -35,7 +37,7 @@ private:
     int totalPerson;
     int totalPersonTime;
     QMap<int, int> personTimeCount;
-    QMap<int, QString> topPersonTime;
+    QList<QPair<QString, int> > topPersonTime;
     QList<int> personTimeByWeekDay;
     bool usable;
 };

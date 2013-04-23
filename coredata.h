@@ -26,7 +26,9 @@ public:
     SignStats * findStats(QString key);
     void addStats(SignStats * stats);
     SignStats *addStats(QDate &sdate, QDate &edate);
-
+    void clearStats();
+    void updateReport();
+    void removeStats(SignStats *stats);
 public slots:
     void setSignInDate (const QDate &date);
     void refreshModel();
@@ -35,6 +37,7 @@ private slots:
 
 private:
     void setPersonModel();
+    void updateStats(SignStats * stats);
     QSqlDatabase db;
     QSqlTableModel * personModel;
     SignInModel * signInModel;

@@ -30,6 +30,7 @@ private slots:
     void updateSignedFilter(const QString &);
     void unlockSignInTable();
     void lockSignInTable();
+    void updateReport();
     void displayReport(int i);
 
 private:
@@ -40,6 +41,7 @@ private:
     CoreData * core;
     QSortFilterProxyModel * proxySignInModel;
     int currentPersonRow;
+    int currentReport;
 };
 
 #endif // MAINWINDOW_H

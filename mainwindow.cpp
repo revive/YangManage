@@ -22,16 +22,18 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     core = new CoreData();
+    currentReport = -1;
     connect(ui->actionNew, SIGNAL(activated()), this, SLOT(newDatabase()));
     connect(ui->actionOpen, SIGNAL(activated()), this, SLOT(openDatabase()));
     connect(ui->actionClose, SIGNAL(activated()), this, SLOT(closeDatabase()));
-    connect(ui->personTableView, SIGNAL(activated(QModelIndex)), this, SLOT(showPersonDetail(QModelIndex)));
+    connect(ui->personTableView, SIGNAL(clicked(QModelIndex)), this, SLOT(showPersonDetail(QModelIndex)));
     connect(ui->editDetailButton, SIGNAL(clicked()), this, SLOT(showPersonDetailEditForm()));
     connect(ui->confirmButton, SIGNAL(clicked()), this, SLOT(updatePersonDetail()));
     connect(ui->delButton, SIGNAL(clicked()), this, SLOT(deletePeople()));
     connect(ui->filterEdit, SIGNAL(textChanged(QString)), this, SLOT(updateSignedFilter(QString)));
     connect(ui->signInButton, SIGNAL(clicked()), this, SLOT(unlockSignInTable()));
     connect(ui->lockButton, SIGNAL(clicked()), this, SLOT(lockSignInTable()));
+    connect(ui->refreshReportButton, SIGNAL(clicked()), this, SLOT(updateReport()));
     ui->tabWidget->setCurrentIndex(0);
     ui->tabWidget->setTabEnabled(1, false);
     ui->tabWidget->setTabEnabled(2, false);
@@ -116,6 +118,7 @@ void MainWindow::closeDatabase()
     delete proxySignInModel;
     proxySignInModel = 0;
     core->getDataBase()->close();
+    core->clearStats();
     ui->actionClose->setEnabled(false);
     ui->actionNew->setEnabled(true);
     ui->actionOpen->setEnabled(true);
@@ -231,6 +234,7 @@ void MainWindow::updatePersonDetail()
     record.append(f5);
     record.append(f6);
     if (core->getPersonModel()->setRecord(currentPersonRow, record)) {
+        core->getPersonModel()->submitAll();
         qDebug()<<"recorder at "<< currentPersonRow << " is updated!";
     }
 }
@@ -281,9 +285,18 @@ void MainWindow::lockSignInTable()
     ui->signInButton->setEnabled(true);
 }
 
+void MainWindow::updateReport()
+{
+    core->updateReport();
+    if (currentReport != -1) {
+        displayReport(currentReport);
+    }
+}
+
 void MainWindow::displayReport(int i)
 {
     qDebug()<<i;
+    currentReport = i;
     QDate date = QDate::currentDate();
     QDate sdate, edate;
     QString key;
@@ -354,12 +367,9 @@ void MainWindow::showReport(const SignStats *stats)
     text.append("</table></div>");
     text.append("<p>").append(QString::fromUtf8("最多到达次数排序")).append("</p>");
     text.append(QString::fromUtf8("<div><table><tr><td>姓名</td><td>次数</td></tr>"));
-    QMap<int, QString> tpt = stats->getTopPersonTime();
-    QMapIterator<int, QString> it(tpt);
-    it.toBack();
-    while (it.hasPrevious()) {
-        it.previous();
-        text.append("<tr><td>").append(it.value()).append("</td><td>").append(QString::number(it.key())).append("</td></tr>");
+    QList<QPair<QString, int> > tpt = stats->getTopPersonTime();
+    for (int i=0; i<tpt.size(); ++i) {
+        text.append("<tr><td>").append(tpt.at(i).first).append("</td><td>").append(QString::number(tpt.at(i).second)).append("</td></tr>");
     }
     text.append("</table></div>");
     ui->reportBrowser->setHtml(text);

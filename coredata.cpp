@@ -18,6 +18,7 @@ CoreData::~CoreData()
     if (db.isOpen()) {
         db.close();
     }
+    clearStats();
 }
 
 bool CoreData::createDBFile(QString dbname)
@@ -129,8 +130,48 @@ void CoreData::addStats(SignStats *stats)
 SignStats * CoreData::addStats(QDate &sdate, QDate &edate)
 {
     SignStats * stats = new SignStats(sdate, edate);
-    QString sdate_str = sdate.toString("yyyy-MM-dd");
-    QString edate_str = edate.toString("yyyy-MM-dd");
+    updateStats(stats);
+    statsReports.insert(stats->getKey(), stats);
+
+    return stats;
+}
+
+void CoreData::clearStats()
+{
+    QMapIterator<QString, SignStats *> ist(statsReports);
+    while (ist.hasNext()) {
+        ist.next();
+        SignStats * stats = ist.value();
+        delete stats;
+        stats = 0;
+    }
+    statsReports.clear();
+}
+
+void CoreData::removeStats(SignStats *stats)
+{
+    if (stats == 0)
+        return;
+    statsReports.remove(stats->getKey());
+    delete stats;
+    stats = 0;
+}
+
+void CoreData::updateReport()
+{
+    QMapIterator<QString, SignStats*> ist(statsReports);
+    while (ist.hasNext()) {
+        ist.next();
+        SignStats * stats = ist.value();
+        updateStats(stats);
+    }
+}
+
+void CoreData::updateStats(SignStats *stats)
+{
+    stats->reset();
+    QString sdate_str = stats->getStartDate();
+    QString edate_str = stats->getEndDate();
     qDebug()<<"start date: " << sdate_str;
     qDebug()<<"end date: " << edate_str;
     QString query_str;
@@ -173,12 +214,9 @@ SignStats * CoreData::addStats(QDate &sdate, QDate &edate)
     while(squery.next()) {
         count = squery.value(0).toInt();
         name = squery.value(1).toString();
-        stats->addTopPersonTime(count, name);
+        stats->addTopPersonTime(name, count);
         qDebug() << name << " -> "<< count;
     }
-    statsReports.insert(stats->getKey(), stats);
-
-    return stats;
 }
 
 void CoreData::setSignInDate(const QDate &date)
